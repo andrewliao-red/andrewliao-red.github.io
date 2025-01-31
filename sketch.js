@@ -14,6 +14,7 @@ let isPaused = false; // Pause state
 let pauseButtonX = 40, pauseButtonY = 40, pauseButtonSize = 60; // Pause button position and size
 let resumeButtonX, resumeButtonY, resumeButtonWidth = 250, resumeButtonHeight = 50; // Resume button properties
 let gameStarted = false;
+const maxBullets = 50;
 
 // For auto-shooting
 let isMouseHeld = false; // Whether the mouse is being held down
@@ -92,6 +93,7 @@ function draw() {
     let angle = atan2(mouseY - playerY, mouseX - playerX);
     let bullet = { x: playerX, y: playerY, angle: angle };
     bullets.push(bullet);
+    if (bullets.length > maxBullets) bullets.shift();
     gunshots.push({ angle: angle, startTime: millis() });
     if (gunshotSound.isLoaded()) gunshotSound.play();
     lastBulletTime = millis(); // Update last bullet time
