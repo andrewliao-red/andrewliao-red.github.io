@@ -14,13 +14,11 @@ let isPaused = false; // Pause state
 let pauseButtonX = 40, pauseButtonY = 40, pauseButtonSize = 60; // Pause button position and size
 let resumeButtonX, resumeButtonY, resumeButtonWidth = 250, resumeButtonHeight = 50; // Resume button properties
 let gameStarted = false;
-const maxBullets = 50;
 
 // For auto-shooting
 let isMouseHeld = false; // Whether the mouse is being held down
 let lastBulletTime = 0; // Tracks the last time a bullet was fired
 const bulletCooldown = 200; // Time between bullets in milliseconds
-
 function preload() {
   zombieImage = loadImage("zombie1.png");
   zombieImage2 = loadImage("zombie2.png");
@@ -36,8 +34,8 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(700, 600);
-  for (let i = 0; i < 16; i++) {
+  createCanvas(700, 600); //dimensions of the canvas
+  for (let i = 0; i < 10; i++) {
     spawnZombie();
   }
 
@@ -59,17 +57,18 @@ function setup() {
   textSize(30); // Set text size
 }
 
-
 function draw() {
   if(!gameStarted){
     return;
   }
+
   if (isPaused) {
     drawPauseScreen();
     return; // Skip the rest of the game logic
   }
 
   clear();
+
   if (isMovingLeft) playerX -= playerSpeed;
   if (isMovingRight) playerX += playerSpeed;
   if (isMovingUp) playerY -= playerSpeed;
@@ -93,7 +92,6 @@ function draw() {
     let angle = atan2(mouseY - playerY, mouseX - playerX);
     let bullet = { x: playerX, y: playerY, angle: angle };
     bullets.push(bullet);
-    if (bullets.length > maxBullets) bullets.shift();
     gunshots.push({ angle: angle, startTime: millis() });
     if (gunshotSound.isLoaded()) gunshotSound.play();
     lastBulletTime = millis(); // Update last bullet time
@@ -132,9 +130,9 @@ function draw() {
     enemy.y += enemy.speed;
 
     imageMode(CENTER);
-    if (enemy.type === "zombie1") image(zombieImage, enemy.x, enemy.y, 60, 60);
-    else if (enemy.type === "zombie2") image(zombieImage2, enemy.x, enemy.y, 100, 100);
-    else if (enemy.type === "zombie3") image(zombieImage3, enemy.x, enemy.y, 125, 125);
+    if (enemy.type === "zombie1") image(zombieImage, enemy.x, enemy.y, 60, 60); // ordinary infected zombie appearance
+    else if (enemy.type === "zombie2") image(zombieImage2, enemy.x, enemy.y, 100, 100); // rusher zombie appearance
+    else if (enemy.type === "zombie3") image(zombieImage3, enemy.x, enemy.y, 125, 125); // juggernaut zombie appearance
 
     drawHealthBar(enemy);
 
@@ -149,8 +147,8 @@ function draw() {
     // Draw "You Lose!" message
     textSize(40);
     textAlign(CENTER);
-    fill(255); // White fill for the rectangle
-    stroke(255, 0, 0); // Red border for the rectangle
+    fill(255, 0, 0); // red fill for the rectangle
+    stroke(255); // Red border for the rectangle
     strokeWeight(4); // Border thickness
     rectMode(CENTER);
 
@@ -166,32 +164,53 @@ function draw() {
 
     noLoop();
   }
+
+  if (score >= 150) {
+    // Draw "You Survived!" message
+    textSize(40);
+    textAlign(CENTER);
+    fill(255); // White fill for the rectangle
+    stroke(0, 255, 0); // Green border for the rectangle
+    strokeWeight(4); // Border thickness
+    rectMode(CENTER);
+
+    // Draw the rectangle (slightly wider and taller than the text)
+    let rectWidth = 350;
+    let rectHeight = 120;
+    rect(width / 2, height / 2, rectWidth, rectHeight, 15); // Rounded rectangle corners
+
+    // Draw the "You Survived!" text
+    noStroke(); // Remove border for text
+    fill(0, 255, 0); // Green text
+    text("You Survived!", width / 2, height / 2 - 20);
+
+    noLoop();
+}
+
     }
   }
   
-  function mousePressed() {
-  // When the mouse is pressed, start auto-shooting
-  isMouseHeld = true;
-}
-
-function mouseReleased() {
-  // When the mouse is released, stop auto-shooting
-  isMouseHeld = false;
-}
 if(bullets.length > 50) {
-  bullets.splice(0, bullets.length - 50);
-  console.log(bullets)
+ //bullets.splice(0, bullets.length - 50);
 }
+//remove bullets when off screen
+for (let i = bullets.length - 1; i >= 0; i--) {
+  if (
+    bullets[i].x < 0 || bullets[i].x > width ||
+    bullets[i].y < 0 || bullets[i].y > height
+  ) {
+    bullets.splice(i, 1);
+  }
+}
+console.log(bullets)
   // Handle collisions
   for (let enemy of enemies) {
     for (let bullet of bullets) {
       if (dist(enemy.x, enemy.y, bullet.x, bullet.y) < 40) {
-        console.log(bullets)
         bullets.splice(bullets.indexOf(bullet), 1);
         enemy.hits--;
         if (enemy.hits <= 0) {
           bloodSpatters.push({ x: enemy.x, y: enemy.y, opacity: 255, timer: millis() });
-          console.log(enemies)
           enemies.splice(enemies.indexOf(enemy), 1);
 
           // Play zombie death sound
@@ -199,7 +218,7 @@ if(bullets.length > 50) {
             zombieDeathSound.play();
           }
 
-          if (score >= 125 && random() < 0.1) spawnZombie("zombie3");
+          if (score >= 100 && random() < 0.1) spawnZombie("zombie3");
           else if (score >= 50 && random() < 0.3) spawnZombie("zombie2");
           else spawnZombie("zombie1");
           score++;
@@ -248,7 +267,7 @@ if(bullets.length > 50) {
 }
 
 function spawnNewZombies() {
-  for (let i = 0; i < 2 + round * 2; i++) {
+  for (let i = 0; i < 1 + round * 1; i++) {
     spawnZombie(); // Spawn more zombies as rounds progress
   }
 }
@@ -306,6 +325,7 @@ function mousePressed() {
     ) {
       isPaused = true;
     } else {
+      isMouseHeld = false;
       let angle = atan2(mouseY - playerY, mouseX - playerX);
       let bullet = { x: playerX, y: playerY, angle: angle };
       bullets.push(bullet);
@@ -314,7 +334,9 @@ function mousePressed() {
     }
   }
 }
-
+function mouseReleased() {
+  isMouseHeld = false;
+}
 function keyPressed() {
   if (key === "a" || key === "A") isMovingLeft = true;
   if (key === "d" || key === "D") isMovingRight = true;
@@ -344,8 +366,8 @@ function spawnZombie(type = "zombie1") {
       speed: type === "zombie1" 
         ? random(0.4, 1.0) // Slow speed for zombie1
         : type === "zombie2" 
-        ? random(4, 5) // Fast speed for zombie2
-        : random(0.1, 0.5), // Very slow speed for zombie3
+        ? random(4.5, 5.5) // Fast speed for zombie2
+        : random(0.25, 0.75), // Very slow speed for zombie3
       hits: type === "zombie1" 
         ? 3 // 3 hits to kill zombie1
         : type === "zombie2" 
@@ -366,6 +388,12 @@ function spawnZombie(type = "zombie1") {
   } while (overlapping); // Repeat the loop if the zombie overlaps with another
 
   enemies.push(newEnemy); // Add the new zombie to the enemies array
+}
+
+// Check win condition
+if (score >= 150) {
+  displayWinScreen();
+  noLoop(); // Stop the game loop
 }
 
 // Event listener for the Start Game button
